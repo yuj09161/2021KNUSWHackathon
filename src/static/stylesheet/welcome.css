@@ -1,0 +1,47 @@
+header {
+    position: absolute;
+    float: left;
+    top: 0%;
+    left: 0%;
+    width: 50%;
+    height: 100%;
+}
+
+div.login {
+    position: absolute;
+    float: right;
+    top: 0%;
+    left: 50%;
+    width: 50%;
+    height: 50%;
+}
+
+div.guest {
+    position: absolute;
+    float: right;
+    top: 50%;
+    left: 50%;
+    width: 50%;
+    height: 50%;
+}
+
+.contents-center {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    text-align: center;
+}
+
+header h1 {
+    font-size: 50px;
+}
+
+.button {
+    background: gray;
+    border: 2px solid black;
+    border-radius: 5px;
+    padding: 20px 50px;
+    font-size: 20px;
+    color: white;
+    text-decoration: none;
+}

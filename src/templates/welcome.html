@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Welcome!</title>
+        <link rel="stylesheet" href="{{url_for('static', filename='stylesheet/welcome.css')}}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+        <script type="text/javascript" src="{{url_for('static', filename='scripts/welcome.js')}}"></script>
+    </head>
+    <body>
+        <header>
+            <div class="contents-center">
+                <h1 class="contents-center">사이트 제목</h1>
+                <h2 class="contents-center">사이트 부제목</h2>
+            </div>
+        </header>
+        <main>
+            <div class="login">
+                <div class="contents-center">
+                    <a href="/login" class="button">로그인</a>
+                </div>
+            </div>
+            <div class="guest">
+                <div class="contents-center">
+                    <a href="/guest" class="button">손님</a>
+                </div>
+            </div>
+        </main>
+    </body>
+</html>

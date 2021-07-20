@@ -1,0 +1,58 @@
+html {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    margin: 0;
+}
+
+header {
+    background-color: cyan;
+    position: relative;
+}
+
+header > h1 {
+    background-color: magenta;
+    text-align: center;
+    margin: 10px 0px;
+}
+
+header > nav {
+    background-color: yellow;
+    display: flex;
+    padding: 5px 10px;
+    margin-bottom: 10px;
+}
+
+.navitem {
+    padding: 5px 5px;
+    color: black;
+    text-decoration: none;
+}
+
+.hspacer {
+    flex: 1;
+}
+
+.center {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+}
+
+.side {
+    background-color: red;
+    flex: 3;
+}
+
+.contents {
+    background-color: green;
+    flex: 7;
+}
+
+footer {
+    background-color: blue;
+}
