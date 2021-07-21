@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, redirect
-from flask_socketio import SocketIO, emit, join_room  # , leave_room
+from flask_socketio import SocketIO, emit  # , join_room, leave_room
 
 import sys
-import json
-import string
-import random
+import uuid
+
+
+USER_TYPES = {'undergraduate', 'graduate', 'professor'}
+CHAT_ROOMS = ('방 1', '방 2')
 
 
 app = Flask(__name__)
@@ -15,9 +17,7 @@ app.secret_key = (
 )
 socketio = SocketIO(app)
 uids = {}
-
-
-USER_TYPES = {'undergraduate', 'graduate', 'professor'}
+usernames = set()
 
 
 @app.route('/')
@@ -43,7 +43,7 @@ def guest():
 
 @app.route('/chat')
 def chat():
-    if request.cookies.get('chat_hys_uid', '') in uids:
+    if uids.get(request.cookies.get('chat_hys_uid', ''), {}):
         return render_template('chat.html')
     else:
         return redirect('/')
@@ -51,70 +51,94 @@ def chat():
 
 @socketio.on('uniqueid')
 def uid_generator():
-    uid = ''.join(random.choices(string.ascii_letters, k=64))
+    print(request.sid)
+    uid = str(uuid.uuid4())
     while uid in uids:
-        uid = ''.join(random.choices(string.ascii_letters, k=64))
-    uids[uid] = {'user_type': None, 'user_name': None}
-    join_room(uid)
-    emit('uniqueid', {'success': True, 'uniqueid': uid})
+        uid = str(uuid.uuid4())
+    uids[uid] = None
+    return {'success': True, 'uniqueid': uid}
 
 
 @socketio.on('guest_auth')
-def guest_auth_handler(raw_data):
-    auth_data = json.loads(raw_data)
-    print(auth_data, type(auth_data))
-    if (
-        'uniqueid' not in auth_data
-        or 'user_type' not in auth_data
-        or 'anon_name' not in auth_data
-    ):
-        return
-
-    uid = auth_data['uniqueid']
-    usertype = auth_data['user_type']
-    username = auth_data['anon_name']
-
-    print(uid, usertype, username)
-
-    join_room(uid)
-
-    if usertype not in USER_TYPES or uid not in uids:
-        emit('auth_respond', {
-            'success': False, 'message': '알 수 없는 오류', 'redirect': '/'
-        })
-
-    uids[uid] = {'usertype': usertype, 'username': username}
-    emit('auth_respond', {'success': True})
-    print(uids)
-
-
-@socketio.on('user_auth')
-def user_auth_handler(auth_data):
+def guest_auth_handler(auth_data):
+    print(request.sid)
     if (
         'uniqueid' not in auth_data
         or 'usertype' not in auth_data
-        or 'username' not in auth_data
+        or 'anonname' not in auth_data
     ):
-        return
+        return {'success': False, 'message': '데이터 오류', 'redirect': '/'}
 
     uid = auth_data['uniqueid']
     usertype = auth_data['usertype']
-    username = auth_data['username']
+    username = auth_data['anonname']
 
-    join_room(uid)
+    if username in usernames:
+        return {
+            'success': False,
+            'message': '사용자명이 중복됩니다.\n다른 이름을 선택해 주세요'
+        }
+    usernames.add(username)
 
     if usertype not in USER_TYPES or uid not in uids:
-        emit('auth_respond', {
-            'success': False, 'message': '알 수 없는 오류', 'redirect': '/'
-        })
+        return {'success': False, 'message': '세션 오류', 'redirect': '/'}
 
-    uids[uid] = {'usertype': usertype, 'username': username}
-    emit('auth_respond', {'success': True})
+    uids[uid] = {'isguest': True, 'usertype': usertype, 'username': username}
+    return {'success': True}
+
+
+'''
+@socketio.on('user_auth')
+def user_auth_handler(auth_data):
+'''
+
+
+@socketio.on('logout')
+def logout_handler(data):
+    print(f'Logout {data}', file=sys.stdout)
+    if 'uniqueid' not in data:
+        return {
+            'success': False, 'message': '데이터 오류', 'redirect': '/'
+        }
+
+    uid = data['uniqueid']
+    # os.system('cls')
+    print(f'Logout User: {uid}', file=sys.stdout)
+
+    if uid not in uids:
+        return {
+            'success': False, 'message': '세션 오류', 'redirect': '/'
+        }
+
+    usernames.remove(uids[uid]['username'])
+    uids[uid] = None
+    return {'success': True}
+
+
+@socketio.on('retrieve_rooms')
+def retrieve_rooms_handler():
+    print(CHAT_ROOMS)
+    if uids.get(request.cookies.get('chat_hys_uid', ''), {}):
+        return {'success': True, 'chatrooms': CHAT_ROOMS}
+    else:
+        return {
+            'success': False,
+            'message': '로그인되지 않았습니다.',
+            'redirect': '/'
+        }
 
 
 @socketio.on('chat')
 def chat_handler(data):
     print('Message chat:', data, type(data), file=sys.stdout)
+
+    user_info = uids[data['uniqueid']]
+
+    emit('chat', {
+        'roomid': data['roomid'],
+        'sender': user_info,
+        'message': data['message']
+    }, broadcast=True, include_self=False)
 
 
 if __name__ == "__main__":

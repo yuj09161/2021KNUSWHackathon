@@ -1,0 +1,108 @@
+.restrictedCenter {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    overflow: hidden;
+}
+
+div.chatList {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    margin: 10px 5px 10px 10px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    background-color: lightgray;
+}
+
+div.currentRoom {
+    display: flex;
+    flex-direction: row;
+    border-radius: 2px;
+    margin: 5px 0px;
+    padding: 5px;
+    background-color: silver;
+}
+
+div.anotherRoom {
+    display: flex;
+    flex-direction: row;
+    border-radius: 2px;
+    margin: 5px 0px;
+    padding: 5px;
+    background-color: silver;
+}
+
+a.currentRoom {
+    font-weight: bold;
+    color: black;
+    text-decoration: none;
+}
+
+a.anotherRoom {
+    font-weight: normal;
+    color: black;
+    text-decoration: none;
+}
+
+div.chatArea {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    margin: 10px 10px 10px 5px;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: lightgray;
+}
+
+div.chatBubbles {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    overflow-y: scroll;
+    background-color: silver;
+    padding: 5px;
+}
+
+div.bubbleContainer {
+    display: flex;
+    flex-direction: row;
+    padding: 5px 10px;
+}
+
+span.userInfoDisplay {
+    display: flex;
+    flex-direction: column;
+}
+
+span.username {
+    flex: 1;
+    font-size: 0.8em;
+    text-align: center;
+}
+
+span.userinfo {
+    flex: 1;
+    font-size: 0.5em;
+    color: gray;
+    text-align: center;
+}
+
+span.textBubble {
+    background-color: lightgray;
+    border-radius: 2px;
+    margin-left: 5px;
+    padding: 10px;
+}
+
+div.chatInputArea {
+    display: flex;
+    flex-direction: row;
+    margin-top: 10px;
+}
+
+input#chatMsg {
+    flex: 1;
+    margin-right: 5px;
+    padding: 10px 20px;
+}

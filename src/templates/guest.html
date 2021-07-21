@@ -5,6 +5,7 @@
         <title>손님 로그인</title>
         <link rel="stylesheet" href="{{url_for('static', filename='stylesheet/guest.css')}}">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+        <script type="text/javascript" src="{{url_for('static', filename='scripts/commons.js')}}"></script>
         <script type="text/javascript" src="{{url_for('static', filename='scripts/guest.js')}}"></script>
     </head>
     <body>
@@ -19,7 +20,7 @@
             </div>
             <div class="login_row">
                 <label for="anonName">이름 입력</label>
-                <input type="text" id="anonName" name="anonName" style="flex: 1" placeholder="알파벳 및 숫자 가능, 최대 10자" pattern="[a-zA-Z0-9]{1,10}">
+                <input type="text" id="anonName" name="anonName" style="flex: 1" placeholder="한글, 알파벳, 숫자 가능, 4~10자" pattern="[a-zA-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ]{4,10}">
             </div>
             <div class="login_row">
                 <button type="button" id="login" name="login" style="flex: 1">입장</button>
