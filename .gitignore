@@ -1,6 +1,7 @@
 #custom
 .vscode/
 test/
+src/data
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
