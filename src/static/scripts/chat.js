@@ -42,21 +42,18 @@ function logout() {
         .find(cookie => cookie.startsWith("chat_hys_uid"))
         .split("=")[1]
     }, afterLogout);
-    console.log("Logout!");
 };
 
 function afterLogout(data) {
     if (data.success) {
         window.location.href = "/";
     } else {
-        window.location.href = data.redirect;
+        alertOnFail(data);
     };
 };
 
-
 function loadChatRooms(data) {
     if (data.success) {
-        console.log(data);
         for (chatroom of data.chatrooms) {
             addChatRoom(chatroom);
         };
@@ -64,7 +61,6 @@ function loadChatRooms(data) {
         alertOnFail(data);
     }
 };
-
 
 function addChatRoom(chatRoomName) {
     const roomName = chatRoomName;
@@ -151,7 +147,7 @@ function receiveMsg(msg) {
     infoContainer.appendChild(Object.assign(
         document.createElement("span"), {
             className: "userinfo",
-            innerText: `${isguest ? "게스트" : "로그인"}·${USERTYPE_STRING[usertype]}`
+            innerText: `${isguest ? "게스트" : "인증됨"}·${USERTYPE_STRING[usertype]}`
         }
     ));
     bubbleContainer.appendChild(infoContainer);

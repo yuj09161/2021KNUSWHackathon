@@ -12,3 +12,12 @@ function alertOnFail(data) {
         window.location.href = data.redirect;
     }
 }
+
+async function sha256(text) {
+    // sniffet from developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest (Public Domain)
+    const encodedMessage = new TextEncoder().encode(text);
+    const hashBuf = await crypto.subtle.digest('SHA-256', encodedMessage);
+    const hashArr = Array.from(new Uint8Array(hashBuf));
+    const hashStr = hashArr.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashStr;
+}

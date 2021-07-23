@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>회원가입 요청</title>
+        <link rel="stylesheet" href="{{url_for('static', filename='stylesheet/login.css')}}">
+        <link rel="stylesheet" href="{{url_for('static', filename='stylesheet/register.css')}}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+        <script type="text/javascript" src="{{url_for('static', filename='scripts/commons.js')}}"></script>
+        <script type="text/javascript" src="{{url_for('static', filename='scripts/register.js')}}"></script>
+    </head>
+    <body>
+        <div class="centeredArea">
+            <span class="spacer"></span>
+            <form id="registerData">
+                <div class="areaRow">
+                    <label for="username">아이디</label>
+                    <input type="text" id="username" name="username" required placeholder="알파벳, 숫자 가능, 6~12자" pattern="[a-zA-Z0-9]{6,12}">
+                </div>
+                <div class="areaRow">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="areaRow">
+                    <label for="usertype">구분 선택</label>
+                    <select id="usertype" name="usertype">
+                        <option value="undergraduate">학부생</option>
+                        <option value="graduate">대학원생</option>
+                        <option value="professor">교수</option>
+                    </select>
+                </div>
+                <div class="areaRow">
+                    <label for="nickname">별명 입력</label>
+                    <input type="text" id="nickname" name="nickname" required placeholder="한글, 알파벳, 숫자 가능, 4~10자" pattern="[a-zA-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ]{4,10}">
+                </div>
+                <div class="areaRow fileArea" id="fileArea" style="flex-direction: column; text-align: center;">
+                    <span class="spacer"></span>
+                    <span id="fileAreaText">
+                        신분 확인용 파일 선택 (학생증 등)<br>
+                        파일을 드래그&드랍하거나<br>
+                        여기를 클릭해 주세요
+                    </span>
+                    <span class="spacer"></span>
+                    <input type="file" name="fileInput" id="fileInput" style="display: none;">
+                </div>
+            </form>
+            <div class="areaRow">
+                <button type="button" id="register" name="register">회원가입</button>
+            </div>
+            <span class="spacer"></span>
+        </div>
+    </body>
+</html>

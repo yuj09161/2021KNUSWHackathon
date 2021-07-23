@@ -1,13 +1,23 @@
-from flask import Flask, render_template, request, redirect
-from flask_socketio import SocketIO, emit  # , join_room, leave_room
+from flask import Flask, render_template, request, redirect, jsonify
+from flask_socketio import SocketIO, emit
 
-import sys
+import os
 import uuid
+import json
+import string
+import random
+import sqlite3
 
 
 USER_TYPES = {'undergraduate', 'graduate', 'professor'}
+TYPE_NAMES = ('undergraduate', 'graduate', 'professor')
 CHAT_ROOMS = ('방 1', '방 2')
 
+
+PROGRAM_DIR = os.path.abspath(os.path.dirname(__file__)) + '/'
+REGISTER_FILE = PROGRAM_DIR + 'data/register_request.json'
+REGISTER_DIR = PROGRAM_DIR + 'data/register_request/'
+USER_DB = PROGRAM_DIR + 'data/users.sqlite'
 
 app = Flask(__name__)
 app.secret_key = (
@@ -18,6 +28,19 @@ app.secret_key = (
 socketio = SocketIO(app)
 uids = {}
 usernames = set()
+registered_users = {}
+nicknames = set()
+
+
+# load users
+con = sqlite3.connect(USER_DB)
+cur = con.cursor()
+for name, passwd, usertype, nickname\
+        in cur.execute('SELECT * FROM users').fetchall():
+    registered_users[name] = passwd, TYPE_NAMES[usertype], nickname
+    nicknames.add(nickname)
+    usernames.add(nickname)
+# end load user
 
 
 @app.route('/')
@@ -33,6 +56,52 @@ def login():
         return redirect('/')
 
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        # process register
+        file = request.files['fileInput']
+        ext = os.path.splitext(file.filename)[1]
+        name = ''.join(
+            random.choices(string.ascii_uppercase + string.digits, k=32)
+        ) + ext
+        while os.path.exists(name):
+            name = ''.join(
+                random.choices(string.ascii_uppercase + string.digits)
+            ) + ext
+        file.save(REGISTER_DIR + name)
+
+        form = request.form
+        username = form['username']
+        usertype = form['usertype']
+        nickname = form['nickname']
+
+        with open(REGISTER_FILE, 'r', encoding='utf-8') as file:
+            priv_data = json.load(file)
+
+        if username in registered_users:
+            return jsonify({'success': False, 'message': '중복되는 아이디입니다'})
+        if usertype not in USER_TYPES:
+            return jsonify({'success': False, 'message': '잘못된 사용자 타입'})
+        if nickname in nicknames:
+            return jsonify({'success': False, 'message': '이미 존재하는 닉네임입니다'})
+
+        with open(REGISTER_FILE, 'w', encoding='utf-8') as file:
+            json.dump(priv_data + [{
+                'username': username,
+                'password': form['password'],
+                'usertype': usertype,
+                'nickname': nickname,
+                'filename': name
+            }], file, indent=4, ensure_ascii=False)
+
+        return jsonify({'success': True})
+    elif request.cookies.get('chat_hys_uid', '') in uids:
+        return render_template('register.html')
+    else:
+        return redirect('/')
+
+
 @app.route('/guest')
 def guest():
     if request.cookies.get('chat_hys_uid', '') in uids:
@@ -43,7 +112,7 @@ def guest():
 
 @app.route('/chat')
 def chat():
-    if uids.get(request.cookies.get('chat_hys_uid', ''), {}):
+    if uids.get(request.cookies.get('chat_hys_uid', ''), None):
         return render_template('chat.html')
     else:
         return redirect('/')
@@ -51,7 +120,6 @@ def chat():
 
 @socketio.on('uniqueid')
 def uid_generator():
-    print(request.sid)
     uid = str(uuid.uuid4())
     while uid in uids:
         uid = str(uuid.uuid4())
@@ -61,7 +129,6 @@ def uid_generator():
 
 @socketio.on('guest_auth')
 def guest_auth_handler(auth_data):
-    print(request.sid)
     if (
         'uniqueid' not in auth_data
         or 'usertype' not in auth_data
@@ -83,55 +150,75 @@ def guest_auth_handler(auth_data):
     if usertype not in USER_TYPES or uid not in uids:
         return {'success': False, 'message': '세션 오류', 'redirect': '/'}
 
-    uids[uid] = {'isguest': True, 'usertype': usertype, 'username': username}
+    uids[uid] = {
+        'isguest': True,
+        'usertype': usertype,
+        'username': username
+    }
     return {'success': True}
 
 
-'''
 @socketio.on('user_auth')
 def user_auth_handler(auth_data):
-'''
+    if (
+        'uniqueid' not in auth_data
+        or 'username' not in auth_data
+        or 'password' not in auth_data
+    ):
+        return {'success': False, 'message': '데이터 오류', 'redirect': '/'}
+
+    uid = auth_data['uniqueid']
+    username = auth_data['username']
+    password = auth_data['password']
+
+    if uid not in uids:
+        return {'success': False, 'message': '세션 오류', 'redirect': '/'}
+    if username not in registered_users:
+        return {'success': False, 'message': '사용자명을 확인해 주세요.'}
+
+    correct_passwd, usertype, nickname = registered_users[username]
+    if password != correct_passwd:
+        return {'success': False, 'message': '비밀번호를 확인해 주세요.'}
+
+    uids[uid] = {
+        'isguest': False,
+        'usertype': usertype,
+        'username': nickname
+    }
+
+    return {'success': True}
 
 
 @socketio.on('logout')
 def logout_handler(data):
-    print(f'Logout {data}', file=sys.stdout)
     if 'uniqueid' not in data:
-        return {
-            'success': False, 'message': '데이터 오류', 'redirect': '/'
-        }
+        return {'success': False, 'message': '데이터 오류', 'redirect': '/'}
 
     uid = data['uniqueid']
-    # os.system('cls')
-    print(f'Logout User: {uid}', file=sys.stdout)
-
     if uid not in uids:
-        return {
-            'success': False, 'message': '세션 오류', 'redirect': '/'
-        }
+        return {'success': False, 'message': '세션 오류', 'redirect': '/'}
 
-    usernames.remove(uids[uid]['username'])
+    userinfo = uids[uid]
+    if userinfo['isguest']:
+        usernames.remove(['username'])
     uids[uid] = None
     return {'success': True}
 
 
 @socketio.on('retrieve_rooms')
 def retrieve_rooms_handler():
-    print(CHAT_ROOMS)
-    if uids.get(request.cookies.get('chat_hys_uid', ''), {}):
+    if uids.get(request.cookies.get('chat_hys_uid', ''), None):
         return {'success': True, 'chatrooms': CHAT_ROOMS}
     else:
         return {
             'success': False,
-            'message': '로그인되지 않았습니다.',
+            'message': '세션이 초기화되었습니다.',
             'redirect': '/'
         }
 
 
 @socketio.on('chat')
 def chat_handler(data):
-    print('Message chat:', data, type(data), file=sys.stdout)
-
     user_info = uids[data['uniqueid']]
 
     emit('chat', {
